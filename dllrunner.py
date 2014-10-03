@@ -6,45 +6,67 @@
 # Executes all DLL exports 
 #
 # Florian Roth
-# v0.1
+# v0.2a
 # October 2014
 
+import os
 import pefile
 import argparse
+import traceback
 from subprocess import Popen
+
+FUZZ_PARAMS = [ 'http://evil.local', '0', '1', 'Install' ]
 
 
 def analyze(dll_file):
 
+	# Debug
+	if args.debug:
+		print "Analysing: %s" % dll_file
+
 	# Export dictionary
 	exports = []
 	
-	pe = pefile.PE(dll_file)
-	
-	for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
-		# print exp.name, exp.ordinal
-		exports.append((exp.name, exp.ordinal))
+	try:
+		pe = pefile.PE(dll_file)
 		
-	return exports
+		for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
+			# print exp.name, exp.ordinal
+			exports.append((exp.name, exp.ordinal))
+			
+		return exports
+		
+	except Exception, e:
+		traceback.print_exc()
+		
+	finally:
+		return exports
+	
 
 	
 def run(dll_file, exports):
 	
+	# Loop through detected function exports
 	for export in exports:
 		exp_name    = export[0]
 		exp_ordinal = export[1]
 		
-		# Executing exported function by ordinal as it has no name
+		# Evaluate function identifier
+		func_ident = exp_ordinal
 		if exp_name:
-			if args.debug:
-				print "Executing via Name: rundll32.exe %s %s" % ( dll_file, exp_name )
-			p = Popen(['rundll32.exe', dll_file, exp_name])
+			func_ident = exp_name
 		
-		# Executing exported function by name
-		else:
+		# Executing exported function
+		if exp_name:		
+			# Debug output
 			if args.debug:
-				print "Executing via Ordinal: rundll32.exe %s %s" % ( dll_file, exp_ordinal )
-			#p = Popen(['rundll32.exe,%s' % dll_file, exp_ordinal])
+				print "Executing: rundll32.exe %s %s" % ( dll_file, func_ident )				
+			# Executing function
+			p = Popen(['rundll32.exe', dll_file, func_ident])			
+			# Fuzzing
+			if args.fuzz:
+				for fuzz_param in FUZZ_PARAMS:
+					p = Popen(['rundll32.exe', dll_file, func_ident, fuzz_param])
 	
 	
 # MAIN ################################################################
@@ -52,13 +74,22 @@ if __name__ == '__main__':
 	
 	# Parse Arguments
 	parser = argparse.ArgumentParser(description='DLLRunner')
-	parser.add_argument('-f', help='DLL file to execute exported functions')
+	parser.add_argument('-f', metavar="dllfile", help='DLL file to execute exported functions')
+	parser.add_argument('--fuzz', action='store_true', default=False, help='Add fuzzing parameters to the functions calls (currently %s params are defined)' % len(FUZZ_PARAMS) )
+	parser.add_argument('--demo', action='store_true', default=False, help='Run a demo using %Systemroot%\\system32\\url.dll')
 	parser.add_argument('--debug', action='store_true', default=False, help='Debug output')
 	
 	args = parser.parse_args()
 	
+	# DLL file
+	dllfile = args.f
+	
+	# Demo mode
+	if args.demo:
+		dllfile = "%s\\system32\\url.dll" % os.environ["SYSTEMROOT"]
+	
 	# Get all exports
-	exports = analyze(args.f)
+	exports = analyze(dllfile)
 
 	# Execute the DLL exports
-	run(args.f, exports)
+	run(dllfile, exports)
