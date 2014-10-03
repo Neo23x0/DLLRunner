@@ -15,7 +15,7 @@ import argparse
 import traceback
 from subprocess import Popen
 
-FUZZ_PARAMS = [ 'http://evil.local', '0', '1', 'Install' ]
+FUZZ_PARAMS = [ 'http://evil.local', 'evil.com', '0', '1', 'Install' ]
 
 
 def analyze(dll_file):
