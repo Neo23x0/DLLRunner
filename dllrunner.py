@@ -76,7 +76,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='DLLRunner')
 	parser.add_argument('-f', metavar="dllfile", help='DLL file to execute exported functions')
 	parser.add_argument('--fuzz', action='store_true', default=False, help='Add fuzzing parameters to the functions calls (currently %s params are defined)' % len(FUZZ_PARAMS) )
-	parser.add_argument('--demo', action='store_true', default=False, help='Run a demo using %Systemroot%\\system32\\url.dll')
+	parser.add_argument('--demo', action='store_true', default=False, help='Run a demo using \\system32\\url.dll')
 	parser.add_argument('--debug', action='store_true', default=False, help='Debug output')
 	
 	args = parser.parse_args()
