@@ -1,7 +1,10 @@
 DLLRunner
 =========
 
-DLLRunner is a clever DLL execution script for malware analysis in sandbox systems. Instead of executing a DLL file via "rundll32.exe file.dll" it analyzes the PE and executes all exported functions by name or ordinal in order to determine if one of the functions causes malicious activity. 
+DLLRunner is a clever DLL execution script for malware analysis in sandbox systems. 
+
+Instead of executing a DLL file via "rundll32.exe file.dll" it analyzes the PE and executes all exported functions by name or ordinal in order to determine if one of the functions causes malicious activity.
+
 Furthermore it tries to fuzz parameters in order to trigger acitivity in functions that require parameters to work. 
 
 Usage
