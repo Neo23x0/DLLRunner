@@ -6,7 +6,7 @@
 # Executes all DLL exports 
 #
 # Florian Roth
-# v0.2a
+# v0.3a
 # October 2014
 
 import os
@@ -22,7 +22,7 @@ def analyze(dll_file):
 
 	# Debug
 	if args.debug:
-		print "Analysing: %s" % dll_file
+		print "[+] Analysing: %s" % dll_file
 
 	# Export dictionary
 	exports = []
@@ -40,33 +40,51 @@ def analyze(dll_file):
 		traceback.print_exc()
 		
 	finally:
+		# Info
+		if args.debug:
+			print "[+] %s exported functions detected." % len(exports)	
 		return exports
 	
 
-	
-def run(dll_file, exports):
+def run_extended(dll_file, exports):
 	
 	# Loop through detected function exports
 	for export in exports:
-		exp_name    = export[0]
-		exp_ordinal = export[1]
+	
+		try:
+			exp_name    = export[0]
+			exp_ordinal = export[1]
+			
+			# Evaluate function identifier
+			func_ident = exp_ordinal
+			if exp_name:
+				func_ident = exp_name
+			
+			# Executing exported function
+			if exp_name:		
+				# Debug output
+				if args.debug:
+					print "[+] Advanced Execution: rundll32.exe %s %s" % ( dll_file, func_ident )				
+				# Executing function
+				p = Popen(['rundll32.exe', dll_file, func_ident])			
+				# Fuzzing
+				if args.fuzz:
+					for fuzz_param in FUZZ_PARAMS:
+						p = Popen(['rundll32.exe', dll_file, func_ident, fuzz_param])
 		
-		# Evaluate function identifier
-		func_ident = exp_ordinal
-		if exp_name:
-			func_ident = exp_name
-		
-		# Executing exported function
-		if exp_name:		
-			# Debug output
-			if args.debug:
-				print "Executing: rundll32.exe %s %s" % ( dll_file, func_ident )				
-			# Executing function
-			p = Popen(['rundll32.exe', dll_file, func_ident])			
-			# Fuzzing
-			if args.fuzz:
-				for fuzz_param in FUZZ_PARAMS:
-					p = Popen(['rundll32.exe', dll_file, func_ident, fuzz_param])
+		except Exception, e:
+			traceback.print_exc()
+
+			
+def run_simple(dll_file):
+	try:
+		# Debug output
+		if args.debug:
+			print "[+] Simple Executing: rundll32.exe %s" % ( dll_file )				
+		# Executing function
+		p = Popen(['rundll32.exe', dll_file])
+	except Exception, e:
+		traceback.print_exc()
 	
 	
 # MAIN ################################################################
@@ -75,6 +93,7 @@ if __name__ == '__main__':
 	# Parse Arguments
 	parser = argparse.ArgumentParser(description='DLLRunner')
 	parser.add_argument('-f', metavar="dllfile", help='DLL file to execute exported functions')
+	parser.add_argument('-l', metavar="limit", help='Only perform extended calls if export function count is less than limit', default=150)	
 	parser.add_argument('--fuzz', action='store_true', default=False, help='Add fuzzing parameters to the functions calls (currently %s params are defined)' % len(FUZZ_PARAMS) )
 	parser.add_argument('--demo', action='store_true', default=False, help='Run a demo using \\system32\\url.dll')
 	parser.add_argument('--debug', action='store_true', default=False, help='Debug output')
@@ -92,4 +111,9 @@ if __name__ == '__main__':
 	exports = analyze(dllfile)
 
 	# Execute the DLL exports
-	run(dllfile, exports)
+	if len(exports) > int(args.l):
+		if args.debug:
+			print "[-] Found more exports than defined via limit (%s)" % args.l
+		run_simple(dllfile)
+	else:
+		run_extended(dllfile, exports)
