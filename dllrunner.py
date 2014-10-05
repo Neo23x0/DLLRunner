@@ -6,7 +6,7 @@
 # Executes all DLL exports 
 #
 # Florian Roth
-# v0.3a
+# v0.4a
 # October 2014
 
 import os
@@ -15,7 +15,7 @@ import argparse
 import traceback
 from subprocess import Popen
 
-FUZZ_PARAMS = [ 'http://evil.local', 'evil.com', '0', '1', 'Install' ]
+FUZZ_PARAMS = [ 'http://evil.local', '0', '1', 'Install', 'DefaultInstall', '127.0.0.1', '%Temp%\\IXP000.TMP\\' ]
 
 
 def analyze(dll_file):
@@ -70,6 +70,9 @@ def run_extended(dll_file, exports):
 				# Fuzzing
 				if args.fuzz:
 					for fuzz_param in FUZZ_PARAMS:
+						# Debug output
+						if args.debug:
+							print "[+] Fuzzed Execution: rundll32.exe %s %s %s" % ( dll_file, func_ident, fuzz_param )					
 						p = Popen(['rundll32.exe', dll_file, func_ident, fuzz_param])
 		
 		except Exception, e:
