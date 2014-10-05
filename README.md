@@ -20,14 +20,16 @@ Furthermore it tries to fuzz parameters in order to trigger acitivity in functio
 Usage
 =========
 
-    usage: dllrunner.py [-h] [-f dllfile] [--fuzz] [--demo] [--debug]
+    usage: dllrunner.py [-h] [-f dllfile] [-l limit] [--fuzz] [--demo] [--debug]
     
     DLLRunner
     
     optional arguments:
-    -h, --help  show this help message and exit
-    -f dllfile  DLL file to execute exported functions
-    --fuzz      Add fuzzing parameters to the functions calls (currently 5
-                params are defined)
-    --demo      Run a demo using \system32\url.dll
-    --debug     Debug output
+      -h, --help  show this help message and exit
+      -f dllfile  DLL file to execute exported functions
+      -l limit    Only perform extended calls if export function count is less
+                  than limit
+      --fuzz      Add fuzzing parameters to the functions calls (currently 5
+                  params are defined)
+      --demo      Run a demo using \system32\url.dll
+      --debug     Debug output
